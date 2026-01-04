@@ -14,9 +14,14 @@ public class PlayerController : MonoBehaviour
     private float ySpeed;
     private float horizontalRotation, verticalRotation;
     public float lookSpeed;
-    public Transform cameraTransform;
+    public Camera cameraTransform;
     public float minLookAngle, maxLookAngle;
+    public LayerMask whatIsStock;
+    public float interactionRange;
+    private GameObject heldPickup;
+    public Transform holdPoint;
 
+    public float throwForce;
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -32,7 +37,7 @@ public class PlayerController : MonoBehaviour
 
         verticalRotation -= lookInput.y * Time.deltaTime * lookSpeed;
         verticalRotation = Mathf.Clamp(verticalRotation, minLookAngle, maxLookAngle);
-        cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
+        cameraTransform.transform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
 
 
         Vector2 moveInput = moveAction.action.ReadValue<Vector2>();
@@ -54,5 +59,42 @@ public class PlayerController : MonoBehaviour
 
         moveAmount.y = ySpeed;
         characterController.Move(moveAmount * Time.deltaTime);
+
+        //check for pickup
+        Ray ray = cameraTransform.ViewportPointToRay(new Vector3(.5f, .5f, 0f));
+        RaycastHit hit;
+        /*if (Physics.Raycast(ray, out hit, interactionRange, whatIsStock))
+        {
+            Debug.Log("I see a pickup");
+        }
+        else
+        {
+            Debug.Log("I see nothing");
+        }*/
+        if (heldPickup == null)
+        {
+            if (Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                if (Physics.Raycast(ray, out hit, interactionRange, whatIsStock))
+                {
+                    heldPickup = hit.collider.gameObject;
+                    heldPickup.transform.SetParent(holdPoint);
+                    heldPickup.transform.localPosition = Vector3.zero;
+                    heldPickup.transform.localRotation = Quaternion.identity;
+                    heldPickup.GetComponent<Rigidbody>().isKinematic = true;
+                }
+            }
+        }
+        else
+        {
+            if (Mouse.current.rightButton.wasPressedThisFrame)
+            {
+                Rigidbody pickupRigidBody = heldPickup.GetComponent<Rigidbody>();
+                pickupRigidBody.isKinematic = false;
+                pickupRigidBody.AddForce(cameraTransform.transform.forward * throwForce, ForceMode.Impulse);
+                heldPickup.transform.SetParent(null);
+                heldPickup = null;
+            }
+        }
     }
 }

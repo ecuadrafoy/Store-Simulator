@@ -2,28 +2,47 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-
 public class PlayerController : MonoBehaviour
 {
-    public InputActionReference moveAction;
-    public InputActionReference jumpAction;
-    public InputActionReference lookAction;
-    public CharacterController characterController;
-    public float moveSpeed = 5f;
-    public float jumpForce = 2f;
-    private float ySpeed;
-    private float horizontalRotation, verticalRotation;
-    public float lookSpeed;
-    public Transform cameraTransform;
-    public float minLookAngle, maxLookAngle;
+    [Header("Input References")]
+    [SerializeField] private InputActionReference moveAction;
+    [SerializeField] private InputActionReference jumpAction;
+    [SerializeField] private InputActionReference lookAction;
 
-    void Start()
+    [Header("Movement")]
+    [SerializeField] private CharacterController characterController;
+    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float jumpForce = 2f;
+    [SerializeField] private float maxFallSpeed = 50f;
+
+    [Header("Camera")]
+    [SerializeField] private Transform cameraTransform;
+    [SerializeField] private float lookSpeed = 2f;
+    [SerializeField] private float minLookAngle = -90f;
+    [SerializeField] private float maxLookAngle = 90f;
+
+    private float verticalVelocity;
+    private float horizontalRotation;
+    private float verticalRotation;
+
+    private void OnEnable()
     {
+        ValidateReferences();
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnDisable()
+    {
+        Cursor.lockState = CursorLockMode.Confined;
+    }
+
+    private void Update()
+    {
+        UpdateCameraRotation();
+        UpdatePlayerMovement();
+    }
+
+    private void UpdateCameraRotation()
     {
         Vector2 lookInput = lookAction.action.ReadValue<Vector2>();
 
@@ -33,26 +52,59 @@ public class PlayerController : MonoBehaviour
         verticalRotation -= lookInput.y * Time.deltaTime * lookSpeed;
         verticalRotation = Mathf.Clamp(verticalRotation, minLookAngle, maxLookAngle);
         cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
+    }
 
-
+    private void UpdatePlayerMovement()
+    {
         Vector2 moveInput = moveAction.action.ReadValue<Vector2>();
-        // Vector3 moveAmount = new Vector3(moveInput.x, 0f, moveInput.y);
-        Vector3 verticalMovement = transform.forward * moveInput.y;
-        Vector3 horizontalMovement = transform.right * moveInput.x;
-        Vector3 moveAmount = verticalMovement + horizontalMovement;
-        moveAmount = moveAmount.normalized;
-        moveAmount = moveAmount * moveSpeed;
-        if (characterController.isGrounded == true)
+        Vector3 moveDirection = CalculateMoveDirection(moveInput);
+        Vector3 moveAmount = moveDirection * moveSpeed;
+
+        HandleJumpAndGravity();
+
+        moveAmount.y = verticalVelocity;
+        characterController.Move(moveAmount * Time.deltaTime);
+    }
+
+    private Vector3 CalculateMoveDirection(Vector2 moveInput)
+    {
+        Vector3 forward = transform.forward * moveInput.y;
+        Vector3 right = transform.right * moveInput.x;
+        Vector3 moveDirection = (forward + right).normalized;
+        return moveDirection;
+    }
+
+    private void HandleJumpAndGravity()
+    {
+        if (characterController.isGrounded)
         {
-            ySpeed = 0f;
+            verticalVelocity = 0f;
+
             if (jumpAction.action.WasPressedThisFrame())
             {
-                ySpeed = jumpForce;
+                verticalVelocity = jumpForce;
             }
         }
-        ySpeed = ySpeed + (Physics.gravity.y * Time.deltaTime);
 
-        moveAmount.y = ySpeed;
-        characterController.Move(moveAmount * Time.deltaTime);
+        verticalVelocity += Physics.gravity.y * Time.deltaTime;
+        verticalVelocity = Mathf.Clamp(verticalVelocity, -maxFallSpeed, jumpForce);
+    }
+
+    private void ValidateReferences()
+    {
+        if (moveAction == null)
+            Debug.LogError("Move Action is not assigned!", this);
+
+        if (jumpAction == null)
+            Debug.LogError("Jump Action is not assigned!", this);
+
+        if (lookAction == null)
+            Debug.LogError("Look Action is not assigned!", this);
+
+        if (characterController == null)
+            Debug.LogError("Character Controller is not assigned!", this);
+
+        if (cameraTransform == null)
+            Debug.LogError("Camera Transform is not assigned!", this);
     }
 }

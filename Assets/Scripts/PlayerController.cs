@@ -18,10 +18,11 @@ public class PlayerController : MonoBehaviour
     public float minLookAngle, maxLookAngle;
     public LayerMask whatIsStock;
     public float interactionRange;
-    private GameObject heldPickup;
+    private StockObject heldPickup;
     public Transform holdPoint;
 
     public float throwForce;
+    public LayerMask whatIsShelf;
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -77,21 +78,57 @@ public class PlayerController : MonoBehaviour
             {
                 if (Physics.Raycast(ray, out hit, interactionRange, whatIsStock))
                 {
-                    heldPickup = hit.collider.gameObject;
+                    /*heldPickup = hit.collider.gameObject;
                     heldPickup.transform.SetParent(holdPoint);
                     heldPickup.transform.localPosition = Vector3.zero;
                     heldPickup.transform.localRotation = Quaternion.identity;
-                    heldPickup.GetComponent<Rigidbody>().isKinematic = true;
+                    heldPickup.GetComponent<Rigidbody>().isKinematic = true;*/
+
+                    heldPickup = hit.collider.GetComponent<StockObject>();
+                    heldPickup.transform.SetParent(holdPoint);
+                    heldPickup.Pickup();
+                }
+            }
+            if (Mouse.current.rightButton.wasPressedThisFrame)
+            {
+                if (Physics.Raycast(ray, out hit, interactionRange, whatIsShelf))
+                {
+                    heldPickup = hit.collider.GetComponent<ShelfSpaceController>().GetStock();
+                    if (heldPickup != null)
+                    {
+                        heldPickup.transform.SetParent(holdPoint);
+                        heldPickup.Pickup();
+                    }
                 }
             }
         }
         else
         {
+            if (Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                if (Physics.Raycast(ray, out hit, interactionRange, whatIsShelf))
+                {
+                    /*heldPickup.transform.position = hit.transform.position;
+                    heldPickup.transform.rotation = hit.transform.rotation;
+
+                    heldPickup.transform.SetParent(null);
+                    heldPickup = null;*/
+                    /*heldPickup.Makeplace();
+                    heldPickup.transform.SetParent(hit.transform);
+                    heldPickup = null;*/
+                    hit.collider.GetComponent<ShelfSpaceController>().PlaceStock(heldPickup);
+                    if (heldPickup.isPlaced == true)
+                    {
+                        heldPickup = null;
+                    }
+                }
+            }
             if (Mouse.current.rightButton.wasPressedThisFrame)
             {
-                Rigidbody pickupRigidBody = heldPickup.GetComponent<Rigidbody>();
-                pickupRigidBody.isKinematic = false;
-                pickupRigidBody.AddForce(cameraTransform.transform.forward * throwForce, ForceMode.Impulse);
+                //Rigidbody pickupRigidBody = heldPickup.GetComponent<Rigidbody>();
+                //pickupRigidBody.isKinematic = false;
+                heldPickup.Release();
+                heldPickup.rigidBody.AddForce(cameraTransform.transform.forward * throwForce, ForceMode.Impulse);
                 heldPickup.transform.SetParent(null);
                 heldPickup = null;
             }

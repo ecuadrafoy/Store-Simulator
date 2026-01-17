@@ -12,7 +12,7 @@ public class StockInfo
         fruitLarge
     }
     public StockType typeofStock;
-    public float price;
+    public float price, currentPrice;
     public StockObject stockObject;
 }
 

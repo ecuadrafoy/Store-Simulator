@@ -31,32 +31,32 @@ public class ShelfSpaceController : MonoBehaviour
                     case StockInfo.StockType.bigDrink:
                         if (objectsOnShelf.Count >= bigDrinkPoints.Count)
                         {
-                            preventPlacing = false;
+                            preventPlacing = true;  // ← Prevent when full
                         }
                         break;
 
                     case StockInfo.StockType.Cereal:
                         if (objectsOnShelf.Count >= cerealPoints.Count)
                         {
-                            preventPlacing = false;
+                            preventPlacing = true;  // ← Prevent when full
                         }
                         break;
                     case StockInfo.StockType.chipsTube:
                         if (objectsOnShelf.Count >= tubeChipPoints.Count)
                         {
-                            preventPlacing = false;
+                            preventPlacing = true;  // ← Prevent when full
                         }
                         break;
                     case StockInfo.StockType.fruit:
                         if (objectsOnShelf.Count >= fruitPoints.Count)
                         {
-                            preventPlacing = false;
+                            preventPlacing = true;  // ← Prevent when full
                         }
                         break;
                     case StockInfo.StockType.fruitLarge:
                         if (objectsOnShelf.Count >= largeFruitPoints.Count)
                         {
-                            preventPlacing = false;
+                            preventPlacing = true;  // ← Prevent when full
                         }
                         break;
                 }

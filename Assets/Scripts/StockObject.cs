@@ -48,4 +48,9 @@ public class StockObject : MonoBehaviour
         collider.enabled = true;
 
     }
+    public void PlaceInBox()
+    {
+        rigidBody.isKinematic = true;
+        collider.enabled = false;
+    }
 }
